@@ -127,7 +127,7 @@ public class Payroll {
         return null;
     }
 
-    // Employee users can only view their own basic information once, then the program ends
+    // Employee users can only view their own basic information 
     static void employeeFlow(Scanner sc, List<String[]> employeeList) {
         System.out.println("\nDisplay options:");
         System.out.println("1. Enter your employee number");
