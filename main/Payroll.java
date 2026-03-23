@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 public class Payroll {
 
-    // CSV file paths
+    // File paths
     static final String EMP_FILE = "resources/MotorPH_Employee Data - Employee Details.csv";
     static final String ATT_FILE = "resources/MotorPH_Employee Data - Attendance Record.csv";
 
@@ -18,6 +18,12 @@ public class Payroll {
     static final String PASS = "12345";
     static final String USER_EMPLOYEE = "employee";
     static final String USER_PAYROLL = "payroll_staff";
+
+    // Employee array indexes
+    static final int EMP_NUM_INDEX = 0;
+    static final int EMP_NAME_INDEX = 1;
+    static final int EMP_BDAY_INDEX = 2;
+    static final int EMP_RATE_INDEX = 3;
 
     // Attendance CSV column indexes
     static final int ATT_EMPNO_COL = 0;
@@ -28,7 +34,7 @@ public class Payroll {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
 
-        // Load employee and attendance data once, then reuse them
+        // Load the data once so the program can reuse it later
         List<String[]> employeeList = readAllEmployees();
         List<String[]> attendanceList = readAllAttendance();
 
@@ -38,13 +44,13 @@ public class Payroll {
         System.out.print("Password: ");
         String password = sc.nextLine().trim();
 
-        // Stop the program immediately if login credentials are incorrect
+        // Stop the program if the login is incorrect
         if (!isValidLogin(username, password)) {
             System.out.println("Incorrect username and/or password.");
             return;
         }
 
-        // Send the user to the correct menu based on the chosen role
+        // Open the correct side of the system depending on the user role
         if (username.equals(USER_EMPLOYEE)) {
             employeeFlow(sc, employeeList);
         } else {
@@ -52,14 +58,13 @@ public class Payroll {
         }
     }
 
-    // Accepts only the required usernames and the correct password
+    // Checks if the username and password are valid
     static boolean isValidLogin(String user, String pass) {
         if (!PASS.equals(pass)) return false;
         return USER_EMPLOYEE.equals(user) || USER_PAYROLL.equals(user);
     }
 
-    // Reads the employee CSV once and stores only the needed fields:
-    // employee number, formatted name, birthday, and hourly rate
+    // Reads all employee records and keeps only the fields used in the program
     static List<String[]> readAllEmployees() {
         List<String[]> employees = new ArrayList<>();
 
@@ -93,8 +98,7 @@ public class Payroll {
         return employees;
     }
 
-    // Reads the attendance CSV once and stores the whole row in memory
-    // so the program no longer reopens the file during every payroll calculation
+    // Reads all attendance records once so the file does not need to be opened again and again
     static List<String[]> readAllAttendance() {
         List<String[]> attendanceRecords = new ArrayList<>();
 
@@ -117,17 +121,17 @@ public class Payroll {
         return attendanceRecords;
     }
 
-    // Searches the loaded employee list for the matching employee number
+    // Looks for the employee record that matches the entered employee number
     static String[] findEmployee(String empNo, List<String[]> employeeList) {
         for (String[] employee : employeeList) {
-            if (employee[0].equals(empNo)) {
+            if (employee[EMP_NUM_INDEX].equals(empNo)) {
                 return employee;
             }
         }
         return null;
     }
 
-    // Employee users can only view their own basic information 
+    // Employee users can view their information once, then the program ends
     static void employeeFlow(Scanner sc, List<String[]> employeeList) {
         System.out.println("\nDisplay options:");
         System.out.println("1. Enter your employee number");
@@ -150,9 +154,9 @@ public class Payroll {
             System.out.println("Employee number does not exist.");
         } else {
             System.out.println("\n===================================");
-            System.out.println("Employee # : " + employee[0]);
-            System.out.println("Employee Name : " + employee[1]);
-            System.out.println("Birthday : " + employee[2]);
+            System.out.println("Employee # : " + employee[EMP_NUM_INDEX]);
+            System.out.println("Employee Name : " + employee[EMP_NAME_INDEX]);
+            System.out.println("Birthday : " + employee[EMP_BDAY_INDEX]);
             System.out.println("===================================");
         }
     }
@@ -201,7 +205,7 @@ public class Payroll {
         }
     }
 
-    // Processes and displays payroll for one selected employee from June to December
+    // Processes payroll for one selected employee from June to December
     static void processOneEmployeePayroll(String empNo, List<String[]> employeeList, List<String[]> attendanceList) {
         String[] employee = findEmployee(empNo, employeeList);
         if (employee == null) {
@@ -209,16 +213,16 @@ public class Payroll {
             return;
         }
 
-        double hourlyRate = parseNumber(employee[3]);
+        double hourlyRate = parseNumber(employee[EMP_RATE_INDEX]);
         if (Double.isNaN(hourlyRate)) {
             System.out.println("Invalid hourly rate in employee file.");
             return;
         }
 
         System.out.println("\n===================================");
-        System.out.println("Employee # : " + employee[0]);
-        System.out.println("Employee Name : " + employee[1]);
-        System.out.println("Birthday : " + employee[2]);
+        System.out.println("Employee # : " + employee[EMP_NUM_INDEX]);
+        System.out.println("Employee Name : " + employee[EMP_NAME_INDEX]);
+        System.out.println("Birthday : " + employee[EMP_BDAY_INDEX]);
         System.out.println("===================================");
 
         for (int month = 6; month <= 12; month++) {
@@ -226,13 +230,13 @@ public class Payroll {
         }
     }
 
-    // Processes payroll for every employee in the loaded employee list
+    // Processes payroll for all employees using the same payroll logic
     static void processAllEmployeesPayroll(List<String[]> employeeList, List<String[]> attendanceList) {
         for (String[] employee : employeeList) {
-            String empNo = employee[0];
-            String name = employee[1];
-            String birthday = employee[2];
-            double hourlyRate = parseNumber(employee[3]);
+            String empNo = employee[EMP_NUM_INDEX];
+            String name = employee[EMP_NAME_INDEX];
+            String birthday = employee[EMP_BDAY_INDEX];
+            double hourlyRate = parseNumber(employee[EMP_RATE_INDEX]);
 
             if (Double.isNaN(hourlyRate)) {
                 System.out.println("\nSkipping " + empNo + " (invalid hourly rate).");
@@ -251,9 +255,11 @@ public class Payroll {
         }
     }
 
-    // Prints the payroll result for both cutoffs of one month.
-    // The first cutoff shows gross and net pay only.
-    // The second cutoff includes all deductions based on the combined monthly gross.
+    // -------------------------
+    // Monthly payroll section
+    // -------------------------
+    // The payroll is split into two cutoffs.
+    // Both cutoff totals are added first, then the deductions are based on the monthly total.
     static void printPayrollForMonth(String empNo, double hourlyRate, int month, List<String[]> attendanceList) {
         int daysInMonth = YearMonth.of(2024, month).lengthOfMonth();
 
@@ -263,7 +269,7 @@ public class Payroll {
         double gross1 = hours1 * hourlyRate;
         double gross2 = hours2 * hourlyRate;
 
-        // Combine both cutoffs first because deductions are based on the monthly total
+        // Add both cutoff salaries first before computing deductions
         double monthlyGross = gross1 + gross2;
 
         double[] deductions = computeDeductions(monthlyGross);
@@ -295,7 +301,7 @@ public class Payroll {
         System.out.println("Net Salary: " + net2);
     }
 
-    // Adds all valid daily work hours for a specific employee within a cutoff period
+    // Adds all valid work hours for the chosen employee within a cutoff range
     static double computeCutoffHours(String empNo, int month, int dayStart, int dayEnd, List<String[]> attendanceList) {
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm");
         double totalHours = 0.0;
@@ -308,9 +314,7 @@ public class Payroll {
 
             int recordMonth = Integer.parseInt(dateParts[0]);
             int day = Integer.parseInt(dateParts[1]);
-            int year = Integer.parseInt(dateParts[2]);
 
-            if (year != 2024) continue;
             if (recordMonth != month) continue;
             if (day < dayStart || day > dayEnd) continue;
 
@@ -323,11 +327,10 @@ public class Payroll {
         return totalHours;
     }
 
-    // Computes one day's payable hours using the required rules:
-    // 1. Only count time from 8:00 AM to 5:00 PM
-    // 2. Treat login from 8:00 AM to 8:10 AM as on time
-    // 3. Deduct 1 hour for lunch
-    // 4. Prevent negative or invalid work hours
+    // Computes payable hours for one attendance record
+    // Only work time from 8:00 AM to 5:00 PM is counted.
+    // Late logins within the grace period are treated as on time,
+    // and one hour is deducted for lunch.
     static double computeHours(LocalTime login, LocalTime logout) {
         LocalTime start = LocalTime.of(8, 0);
         LocalTime grace = LocalTime.of(8, 10);
@@ -351,7 +354,10 @@ public class Payroll {
         return hoursWorked;
     }
 
-    // Computes all required government deductions based on monthly gross salary
+    // -------------------------
+    // Government deduction section
+    // -------------------------
+    // Deductions are based on the total monthly salary, not each cutoff by itself.
     static double[] computeDeductions(double monthlyGross) {
         double sss = computeSSS(monthlyGross);
         double philHealth = computePhilHealth(monthlyGross);
@@ -365,7 +371,7 @@ public class Payroll {
         return new double[] { sss, philHealth, pagIbig, tax };
     }
 
-    // Returns the employee SSS contribution based on the salary bracket
+    // Returns the SSS contribution based on the salary bracket table used in this payroll
     static double computeSSS(double monthlyGross) {
         if (monthlyGross < 3250) return 135.00;
         else if (monthlyGross < 3750) return 157.50;
@@ -414,7 +420,7 @@ public class Payroll {
         else return 1125.00;
     }
 
-    // Computes the employee share of PhilHealth contribution
+    // Computes the employee share of PhilHealth
     static double computePhilHealth(double monthlyGross) {
         double premium = monthlyGross * 0.03;
         if (premium < 300.0) premium = 300.0;
@@ -422,7 +428,7 @@ public class Payroll {
         return premium * 0.50;
     }
 
-    // Computes the Pag-IBIG contribution based on salary rules and cap
+    // Computes the Pag-IBIG contribution based on salary level and contribution cap
     static double computePagIbig(double monthlyGross) {
         double rate;
         if (monthlyGross < 1000.0) rate = 0.0;
@@ -434,7 +440,7 @@ public class Payroll {
         return contribution;
     }
 
-    // Computes withholding tax based on the taxable monthly income brackets
+    // Computes withholding tax using the taxable monthly income brackets
     static double computeWithholdingTax(double taxable) {
         if (taxable <= 20832.0) return 0.0;
 
@@ -445,7 +451,7 @@ public class Payroll {
         else return 200833.33 + (taxable - 666667.0) * 0.35;
     }
 
-    // Converts month number into its printed month name for output display
+    // Converts month numbers into month names for display
     static String monthName(int month) {
         return switch (month) {
             case 6 -> "June";
@@ -459,13 +465,13 @@ public class Payroll {
         };
     }
 
-    // Removes commas, currency signs, and other non-numeric characters before parsing
+    // Removes extra symbols so numeric values from the CSV can be read safely
     static String cleanNumber(String s) {
         if (s == null) return "";
         return s.replaceAll("[^0-9.\\-]", "");
     }
 
-    // Converts the cleaned numeric text into a double value
+    // Converts cleaned text into a number
     static double parseNumber(String s) {
         try {
             String cleaned = cleanNumber(s);
