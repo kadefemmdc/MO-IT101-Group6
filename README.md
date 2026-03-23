@@ -3,7 +3,7 @@ MO-IT101-Group6
 
 Date Added: 3/7/2026
 
-Milestone 2: Initial Code Submission
+Terminal Assessment: Final Code Submission
 
 
 Team Details
